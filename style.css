@@ -42,6 +42,7 @@ body {
 .item {
     background: #40414C;
     padding: 2vw;
+    font-size: 3vw;
 }
 
 .item:not(:last-child) {

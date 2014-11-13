@@ -1,6 +1,6 @@
 var gameSelect;
 var mapSelect;
-var formatButton;
+// var formatButton;
 var statsElement;
 var data;
 
@@ -82,7 +82,8 @@ function updateItems() {
     var game = gameSelect.val();
     var map = mapSelect.val();
 
-    var showSections = formatButton.text().search("Hide") != -1;
+    // var showSections = formatButton.text().search("Hide") != -1;
+    var showSections = true;
     if (showSections) {
         var sections = data[game].sections;
         for (var sIndex = 0; sIndex < sections.length; ++sIndex) {
@@ -141,17 +142,17 @@ function initNav() {
     mapSelect = $("#map");
     mapSelect.change(function() { onChangeMap($(this).val()); });
 
-    formatButton = $("#format");
-    formatButton.click(function() {
-        console.log('click');
-        var hide = formatButton.text().search("Hide") != -1;
-        if (hide) {
-            formatButton.text("Show Sections");
-        } else {
-            formatButton.text("Hide Sections");
-        }
-        updateItems();
-    });
+    // formatButton = $("#format");
+    // formatButton.click(function() {
+    //     console.log('click');
+    //     var hide = formatButton.text().search("Hide") != -1;
+    //     if (hide) {
+    //         formatButton.text("Show Sections");
+    //     } else {
+    //         formatButton.text("Hide Sections");
+    //     }
+    //     updateItems();
+    // });
 
     statsElement = $("#stats")
 }

@@ -61,11 +61,20 @@ function newMap(label) {
 function newSection(label) {
     var section = $("<div class='section'>");
     var title = $("<div class='section-title'>");
-    title.text(label);
     var sectionItems = $("<div class='section-items'>");
+
+    title.text(label);
+    title.click(function () {
+	if (sectionItems.is(":hidden")) {
+	    sectionItems.slideDown("fast");
+	} else {
+	    sectionItems.slideUp("fast");
+	}
+    })
     section.append(title);
     section.append(sectionItems);
     statsElement.append(section);
+
     return sectionItems;
 }
 

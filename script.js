@@ -1,5 +1,7 @@
 var gameSelect;
 var mapSelect;
+var formatButton;
+var statsElement;
 var data;
 
 function createCORSRequest(method, url) {
@@ -56,18 +58,102 @@ function newMap(label) {
     newOption(mapSelect, label);
 }
 
+function newSection(label) {
+    var section = $("<div>");
+    section.text(label);
+    $("#stats").append(section);
+    return section;
+}
+
+function newItem(section, itemName, itemTime) {
+    var item = $("<div>");
+    var name = $("<span>");
+    name.text(itemName);
+    var time = $("<span>");
+    time.text(itemTime);
+    item.append(name);
+    item.append(time);
+    section.append(item);
+}
+
+function updateItems() {
+    statsElement.empty();
+
+    var game = gameSelect.val();
+    var map = mapSelect.val();
+
+    var showSections = formatButton.text().search("Hide") != -1;
+    if (showSections) {
+        var sections = data[game].sections;
+        for (var sIndex = 0; sIndex < sections.length; ++sIndex) {
+            var section = sections[sIndex];
+            var sectionElement = newSection(section);
+            var items = data[game][map][section];
+            var count = 0;
+            for (item in items) {
+                count++;
+                newItem(sectionElement, item, items[item]);
+            }
+            if (count == 0) {
+                sectionElement.remove()
+            }
+        }
+    } else {
+        var allItems = {};
+        var sections = data[game].sections;
+        for (var sIndex = 0; sIndex < sections.length; ++sIndex) {
+            var section = sections[sIndex];
+            var items = data[game][map][section];
+            for (item in items) {
+                allItems[item] = items[item];
+            }
+        }
+        var itemNames = [];
+        for (item in allItems) {
+            itemNames.push(item);
+        }
+        itemNames.sort();
+        for (var nameIndex = 0; nameIndex < itemNames.length; ++nameIndex) {
+            var item = itemNames[nameIndex]
+            newItem(statsElement, item, allItems[item]);
+        }
+
+    }
+}
+
 function onChangeGame(game) {
     mapSelect.empty();
     gameData = data[game];
     for (map in gameData) {
         newMap(map);
     }
+    onChangeMap();
 }
 
-function initSelects() {
+function onChangeMap(map) {
+    updateItems();
+}
+
+function initNav() {
     gameSelect = $("#game");
     gameSelect.change(function() { onChangeGame($(this).val()); });
+
     mapSelect = $("#map");
+    mapSelect.change(function() { onChangeMap($(this).val()); });
+
+    formatButton = $("#format");
+    formatButton.click(function() {
+        console.log('click');
+        var hide = formatButton.text().search("Hide") != -1;
+        if (hide) {
+            formatButton.text("Show Sections");
+        } else {
+            formatButton.text("Hide Sections");
+        }
+        updateItems();
+    });
+
+    statsElement = $("#stats")
 }
 
 function loadData(onLoadWorksheet) {
@@ -106,6 +192,8 @@ function parseJsonData(jsonData) {
     data[game] = {};
 
     columnNames = {};
+    sectionMap = {};
+    sections = [];
     for (var entryIndex = 0; entryIndex < jsonData.entry.length; ++entryIndex) {
         var entry = jsonData.entry[entryIndex];
         var map = entry.title.$t;
@@ -116,21 +204,45 @@ function parseJsonData(jsonData) {
             for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
                 var item = items[itemIndex];
                 var itemContent = item.split(": ");
-                columnNames[itemContent[0]] = itemContent[1];
+                var columnKey = itemContent[0];
+                var columnName = itemContent[1];
+                columnNames[columnKey] = columnName;
             }
+            continue;
+        } else if (map == "section") {
+            for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+                var item = items[itemIndex];
+                var itemContent = item.split(": ");
+                var columnName = columnNames[itemContent[0]];
+                var sectionName = itemContent[1];
+                sectionMap[columnName] = sectionName;
+            }
+            continue;
+        } else if (map == "sections") {
+            for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+                var item = items[itemIndex];
+                var itemContent = item.split(": ");
+                var sectionName = itemContent[1];
+                sections.push(sectionName);
+            }
+            data[game].sections = sections;
             continue;
         }
 
         data[game][map] = {};
+        for (var i = 0; i < sections.length; ++i) {
+            data[game][map][sections[i]] = {}
+        }
         for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
             var item = items[itemIndex];
             var itemContent = item.split(": ");
-            var name = columnNames[itemContent[0]];//itemName[itemContent[0]];
+            var name = columnNames[itemContent[0]];
             if (name == undefined) {
-                throw "Key Error: " + itemContent[0];
+                console.log("Error: No translation for '" + itemContent[0] + "'");
+                name = itemContent[0];
             }
             var time = itemContent[1];
-            data[game][map][name] = time;
+            data[game][map][sectionMap[name]][name] = time;
         }
     }
 
@@ -139,7 +251,7 @@ function parseJsonData(jsonData) {
 }
 
 function onReady() {
-    initSelects();
+    initNav();
 
     data = {};
     loadData(function(xhr) {

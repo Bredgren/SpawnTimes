@@ -59,17 +59,21 @@ function newMap(label) {
 }
 
 function newSection(label) {
-    var section = $("<div>");
-    section.text(label);
-    $("#stats").append(section);
-    return section;
+    var section = $("<div class='section'>");
+    var title = $("<div class='section-title'>");
+    title.text(label);
+    var sectionItems = $("<div class='section-items'>");
+    section.append(title);
+    section.append(sectionItems);
+    statsElement.append(section);
+    return sectionItems;
 }
 
 function newItem(section, itemName, itemTime) {
-    var item = $("<div>");
-    var name = $("<span>");
+    var item = $("<div class='item'>");
+    var name = $("<span class='item-name'>");
     name.text(itemName);
-    var time = $("<span>");
+    var time = $("<span class='item-time'>");
     time.text(itemTime);
     item.append(name);
     item.append(time);

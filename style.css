@@ -1,0 +1,32 @@
+
+body {
+    background: #31323C;
+}
+
+#container {
+
+}
+
+#nav {
+    border-bottom: 3px solid #2573BE;
+}
+
+#nav select {
+    height: 30px;
+    background: 0;
+    color: #2573BE;
+    border: 0px;
+    border-right: 3px solid #2573BE;
+}
+
+#format {
+    color: #2573BE;
+    height: 30px;
+    cursor: pointer;
+    border-right: 3px solid #2573BE;
+    -webkit-user-select: none;
+}
+
+#stats {
+
+}

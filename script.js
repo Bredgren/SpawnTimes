@@ -27,7 +27,7 @@ function createCORSRequest(method, url) {
 }
 
 function sortOptions(select) {
-    var options = $("#" + select.attr("id") + " option");
+    var options = $(select.selector + " option");
 
     options.sort(function(a,b) {
         if (a.text > b.text) return 1;
@@ -36,7 +36,7 @@ function sortOptions(select) {
     });
 
     select.empty().append( options );
-    gameSelect.val(options[0].value);
+    select.val(options[0].value);
 }
 
 function newOption(select, label) {
@@ -49,15 +49,24 @@ function newOption(select, label) {
 
 function newGame(label) {
     newOption(gameSelect, label);
+    onChangeGame(gameSelect.val());
 }
 
 function newMap(label) {
     newOption(mapSelect, label);
 }
 
+function onChangeGame(game) {
+    mapSelect.empty();
+    gameData = data[game];
+    for (map in gameData) {
+        newMap(map);
+    }
+}
+
 function initSelects() {
     gameSelect = $("#game");
-    gameSelect.change(function() { console.log("change", $(this).val()); });
+    gameSelect.change(function() { onChangeGame($(this).val()); });
     mapSelect = $("#map");
 }
 
@@ -91,17 +100,55 @@ function loadData(onLoadWorksheet) {
     }
 }
 
+function parseJsonData(jsonData) {
+    console.log('jsonData:', jsonData);
+    var game = jsonData.title.$t;
+    data[game] = {};
+
+    columnNames = {};
+    for (var entryIndex = 0; entryIndex < jsonData.entry.length; ++entryIndex) {
+        var entry = jsonData.entry[entryIndex];
+        var map = entry.title.$t;
+        var content = entry.content.$t;
+        var items = content.split(", ");
+
+        if (map == "column") {
+            for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+                var item = items[itemIndex];
+                var itemContent = item.split(": ");
+                columnNames[itemContent[0]] = itemContent[1];
+            }
+            continue;
+        }
+
+        data[game][map] = {};
+        for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+            var item = items[itemIndex];
+            var itemContent = item.split(": ");
+            var name = columnNames[itemContent[0]];//itemName[itemContent[0]];
+            if (name == undefined) {
+                throw "Key Error: " + itemContent[0];
+            }
+            var time = itemContent[1];
+            data[game][map][name] = time;
+        }
+    }
+
+    newGame(game);
+    console.log(data);
+}
+
 function onReady() {
     initSelects();
 
+    data = {};
     loadData(function(xhr) {
         return function () {
     	      var responseText = xhr.responseText;
 	          var startGarbage = "data.io.handleScriptLoaded(";
-	          var data = JSON.parse(responseText.slice(startGarbage.length + 1, -2)).feed;
-	          console.log(data)
-	          console.log(data.title.$t);
-            newGame(data.title.$t);
+            var jsonString = responseText.slice(startGarbage.length + 1, -2);
+	          var data = JSON.parse(jsonString).feed;
+            parseJsonData(data);
         }
     });
 }

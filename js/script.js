@@ -1,5 +1,14 @@
+// TODO:
+//  - show current game/map
+//  - game not showing up
+//  - items
+//  - lazy loading
+//  - caching
+
 var gameMenu;
 var mapMenu;
+var currentGame;
+var currentMap;
 var statusElement;
 var statsElement;
 var data;
@@ -30,34 +39,53 @@ function createCORSRequest(method, url) {
   return xhr;
 }
 
-function sortOptions(select) {
-    var options = $(select.selector + " option");
+function sortItems(menu) {
+    var items = $(menu.selector + " li");
 
-    options.sort(function(a,b) {
-        if (a.text > b.text) return 1;
-        else if (a.text < b.text) return -1;
+    items.sort(function(a,b) {
+        if (a.children[0].text > b.children[0].text) return 1;
+        else if (a.children[0].text < b.children[0].text) return -1;
         else return 0
     });
 
-    select.empty().append( options );
-    select.val(options[0].value);
+    menu.empty().append( items );
 }
 
-function newOption(select, label) {
-    var item = $("<option>");
-    item.text(label);
-    item.attr("value", label);
-    select.append(item);
-    sortOptions(select);
+function onChangeGame(game) {
+    currentGame = game;
+    mapMenu.empty();
+    gameData = data[game];
+    var maps = [];
+    for (map in gameData) {
+        if (map != "sections") {
+            maps.push(map);
+            newMap(map);
+        }
+    }
+    maps.sort();
+    onChangeMap(maps[0]);
+}
+
+function onChangeMap(map) {
+    currentMap = map;
+    updateItems();
+}
+
+function newMenuItem(menu, label, callback) {
+    var item = $("<li>");
+    var link = $("<a href='javascript:void(0)' onClick=\"" + callback + ";\">");
+    link.text(label);
+    item.append(link);
+    menu.append(item);
+    sortItems(menu);
 }
 
 function newGame(label) {
-    newOption(gameMenu, label);
-    onChangeGame(gameMenu.val());
+    newMenuItem(gameMenu, label, "onChangeGame('" + label + "')");
 }
 
 function newMap(label) {
-    newOption(mapMenu, label);
+    newMenuItem(mapMenu, label, "onChangeMap('" + label + "')");
 }
 
 function newSection(label) {
@@ -94,14 +122,11 @@ function newItem(section, itemName, itemTime) {
 function updateItems() {
     statsElement.empty();
 
-    var game = gameMenu.val();
-    var map = mapMenu.val();
-
-    var sections = data[game].sections;
+    var sections = data[currentGame].sections;
     for (var sIndex = 0; sIndex < sections.length; ++sIndex) {
         var section = sections[sIndex];
         var sectionElement = newSection(section);
-        var items = data[game][map][section];
+        var items = data[currentGame][currentMap][section];
         var count = 0;
         for (item in items) {
             count++;
@@ -113,36 +138,23 @@ function updateItems() {
     }
 }
 
-function onChangeGame(game) {
-    mapMenu.empty();
-    gameData = data[game];
-    for (map in gameData) {
-        newMap(map);
-    }
-    onChangeMap();
-}
-
-function onChangeMap(map) {
-    updateItems();
-}
-
 function initNav() {
     gameMenu = $("#game");
-    // gameMenu.change(function() { onChangeGame($(this).val()); });
-
     mapMenu = $("#map");
-    // mapSelect.change(function() { onChangeMap($(this).val()); });
-
     statusElement = $("#load-status")
     statsElement = $("#stats")
 }
 
 function doneLoading() {
     statusElement.empty();
-    console.log(data)
+    console.log(data) // *
+    var games = [];
     for (game in data) {
+        games.push(game);
         newGame(game);
     }
+    games.sort();
+    onChangeGame(games[0]);
 }
 
 function onLoadResult() {

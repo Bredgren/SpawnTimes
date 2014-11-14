@@ -40,15 +40,14 @@ function createCORSRequest(method, url) {
 }
 
 function sortItems(menu) {
-    var items = $(menu.selector + " li");
-
+    var items = $(menu.selector + " option");
     items.sort(function(a,b) {
-        if (a.children[0].text > b.children[0].text) return 1;
-        else if (a.children[0].text < b.children[0].text) return -1;
+        if (a.text > b.text) return 1;
+        else if (a.text < b.text) return -1;
         else return 0
     });
-
-    menu.empty().append( items );
+    menu.empty().append(items);
+    menu.val(items[0].value);
 }
 
 function onChangeGame(game) {
@@ -66,26 +65,12 @@ function onChangeGame(game) {
     onChangeMap(maps[0]);
 }
 
-function onChangeMap(map) {
-    currentMap = map;
-    updateItems();
-}
-
-function newMenuItem(menu, label, callback) {
-    var item = $("<li>");
-    var link = $("<a href='javascript:void(0)' onClick=\"" + callback + ";\">");
-    link.text(label);
-    item.append(link);
-    menu.append(item);
-    sortItems(menu);
-}
-
 function newGame(label) {
-    newMenuItem(gameMenu, label, "onChangeGame('" + label + "')");
+    newMenuItem(gameMenu, label);
 }
 
 function newMap(label) {
-    newMenuItem(mapMenu, label, "onChangeMap('" + label + "')");
+    newMenuItem(mapMenu, label);
 }
 
 function newSection(label) {
@@ -138,9 +123,23 @@ function updateItems() {
     }
 }
 
+function onChangeMap(map) {
+    currentMap = map;
+    updateItems();
+}
+
+function newMenuItem(menu, label) {
+    var item = $("<option>");
+    item.text(label);
+    menu.append(item);
+    sortItems(menu);
+}
+
 function initNav() {
     gameMenu = $("#game");
+    gameMenu.change(function() { onChangeGame($(this).val()); });
     mapMenu = $("#map");
+    mapMenu.change(function() { onChangeMap($(this).val()); });
     statusElement = $("#load-status")
     statsElement = $("#stats")
 }

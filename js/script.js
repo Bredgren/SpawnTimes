@@ -316,12 +316,12 @@ function initData() {
             if (xhr.status != 200) {
                 loadFail(game);
             } else {
-                loadSuccess(game);
-    	          var responseText = xhr.responseText;
-	              var startGarbage = "data.io.handleScriptLoaded(";
+    	        var responseText = xhr.responseText;
+	        var startGarbage = "data.io.handleScriptLoaded(";
                 var jsonString = responseText.slice(startGarbage.length + 1, -2);
-	              var jsonData = JSON.parse(jsonString).feed;
+	        var jsonData = JSON.parse(jsonString).feed;
                 parseJsonData(jsonData);
+                loadSuccess(game);
             }
         }
     });

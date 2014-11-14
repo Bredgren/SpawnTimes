@@ -71,27 +71,27 @@ function newMap(label) {
     newMenuItem(mapMenu, label);
 }
 
-function newSection(label) {
-    var section = $("<div class='section'>");
-    var title = $("<div class='section-title'>");
-    var sectionItems = $("<div class='section-items'>");
+function newPanel(label) {
+    var panel = $("<div class='panel panel-primary'>");
+    var heading = $("<div class='panel-heading'>");
+    var body = $("<div class='panel-body'>");
 
-    title.text(label);
-    title.click(function () {
-	      if (sectionItems.is(":hidden")) {
-	          sectionItems.slideDown("fast");
-	      } else {
-	          sectionItems.slideUp("fast");
-	      }
+    heading.text(label);
+    heading.click(function () {
+	if (body.is(":hidden")) {
+	    body.slideDown("fast");
+	} else {
+	    body.slideUp("fast");
+	}
     })
-    section.append(title);
-    section.append(sectionItems);
-    statsElement.append(section);
+    panel.append(heading);
+    panel.append(body);
+    statsElement.append(panel);
 
-    return sectionItems;
+    return panel;
 }
 
-function newItem(section, itemName, itemTime) {
+function newItem(body, itemName, itemTime) {
     var item = $("<div class='item'>");
     var name = $("<span class='item-name'>");
     name.text(itemName);
@@ -99,7 +99,7 @@ function newItem(section, itemName, itemTime) {
     time.text(itemTime);
     item.append(name);
     item.append(time);
-    section.append(item);
+    body.append(item);
 }
 
 function updateItems() {
@@ -108,15 +108,15 @@ function updateItems() {
     var sections = data[currentGame].sections;
     for (var sIndex = 0; sIndex < sections.length; ++sIndex) {
         var section = sections[sIndex];
-        var sectionElement = newSection(section);
+        var panel = newPanel(section);
         var items = data[currentGame][currentMap][section];
         var count = 0;
         for (item in items) {
             count++;
-            newItem(sectionElement, item, items[item]);
+            newItem(panel.find(".panel-body"), item, items[item]);
         }
         if (count == 0) {
-            sectionElement.remove()
+            panel.remove()
         }
     }
 }

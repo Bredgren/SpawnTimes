@@ -1,6 +1,4 @@
 // TODO:
-//  - show current game/map
-//  - game not showing up
 //  - items
 //  - lazy loading
 //  - caching
@@ -146,7 +144,6 @@ function initNav() {
 
 function doneLoading() {
     statusElement.empty();
-    console.log(data) // *
     var games = [];
     for (game in data) {
         games.push(game);
@@ -172,7 +169,6 @@ function onLoadResult() {
 }
 
 function beginLoading(game) {
-    console.log('begin loading', game);
     var id = game.replace(" ", "-");
     var label = $("<span class='label label-warning' id=" + id + ">")
     label.text(game);
@@ -240,7 +236,6 @@ function loadData(onLoadWorksheet) {
                 var id = gameIndex + 2;
                 loadWorksheet(id, onLoadWorksheet, gameName);
             }
-            console.log("games:", games);
         }
     }
     loadWorksheet(1, onLoadInfo, "Info");

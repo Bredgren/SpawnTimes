@@ -184,8 +184,10 @@ function loadSuccess(game) {
 function loadFail(game) {
     var id = game.replace(" ", "-");
     var label = $("#" + id);
-    label.toggleClass("label-warning label-danger");
-    onLoadResult();
+    if (label.hasClass("label-warning")) {
+	label.toggleClass("label-warning label-danger");
+	onLoadResult();
+    }
 }
 
 function loadData(onLoadWorksheet) {
@@ -201,7 +203,7 @@ function loadData(onLoadWorksheet) {
     	      throw new Error('CORS not supported');
         }
         xhr.onerror = function() {
-    	      console.log('There was an error!');
+                loadFail(game);
         };
 
         xhr.onload = onLoad(xhr, game);
@@ -304,7 +306,7 @@ function initData() {
     data = {};
     loadData(function(xhr, game) {
         return function () {
-            if (xhr.status == 400) {
+            if (xhr.status != 200) {
                 loadFail(game);
             } else {
                 loadSuccess(game);

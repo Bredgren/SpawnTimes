@@ -1,6 +1,6 @@
-var gameSelect;
-var mapSelect;
-// var formatButton;
+var gameMenu;
+var mapMenu;
+var statusElement;
 var statsElement;
 var data;
 
@@ -65,11 +65,11 @@ function newSection(label) {
 
     title.text(label);
     title.click(function () {
-	if (sectionItems.is(":hidden")) {
-	    sectionItems.slideDown("fast");
-	} else {
-	    sectionItems.slideUp("fast");
-	}
+	      if (sectionItems.is(":hidden")) {
+	          sectionItems.slideDown("fast");
+	      } else {
+	          sectionItems.slideUp("fast");
+	      }
     })
     section.append(title);
     section.append(sectionItems);
@@ -95,43 +95,19 @@ function updateItems() {
     var game = gameSelect.val();
     var map = mapSelect.val();
 
-    // var showSections = formatButton.text().search("Hide") != -1;
-    var showSections = true;
-    if (showSections) {
-        var sections = data[game].sections;
-        for (var sIndex = 0; sIndex < sections.length; ++sIndex) {
-            var section = sections[sIndex];
-            var sectionElement = newSection(section);
-            var items = data[game][map][section];
-            var count = 0;
-            for (item in items) {
-                count++;
-                newItem(sectionElement, item, items[item]);
-            }
-            if (count == 0) {
-                sectionElement.remove()
-            }
+    var sections = data[game].sections;
+    for (var sIndex = 0; sIndex < sections.length; ++sIndex) {
+        var section = sections[sIndex];
+        var sectionElement = newSection(section);
+        var items = data[game][map][section];
+        var count = 0;
+        for (item in items) {
+            count++;
+            newItem(sectionElement, item, items[item]);
         }
-    } else {
-        var allItems = {};
-        var sections = data[game].sections;
-        for (var sIndex = 0; sIndex < sections.length; ++sIndex) {
-            var section = sections[sIndex];
-            var items = data[game][map][section];
-            for (item in items) {
-                allItems[item] = items[item];
-            }
+        if (count == 0) {
+            sectionElement.remove()
         }
-        var itemNames = [];
-        for (item in allItems) {
-            itemNames.push(item);
-        }
-        itemNames.sort();
-        for (var nameIndex = 0; nameIndex < itemNames.length; ++nameIndex) {
-            var item = itemNames[nameIndex]
-            newItem(statsElement, item, allItems[item]);
-        }
-
     }
 }
 
@@ -149,25 +125,31 @@ function onChangeMap(map) {
 }
 
 function initNav() {
-    gameSelect = $("#game");
-    gameSelect.change(function() { onChangeGame($(this).val()); });
+    gameMenu = $("#game");
+    // gameMenu.change(function() { onChangeGame($(this).val()); });
 
-    mapSelect = $("#map");
-    mapSelect.change(function() { onChangeMap($(this).val()); });
+    mapMenu = $("#map");
+    // mapSelect.change(function() { onChangeMap($(this).val()); });
 
-    // formatButton = $("#format");
-    // formatButton.click(function() {
-    //     console.log('click');
-    //     var hide = formatButton.text().search("Hide") != -1;
-    //     if (hide) {
-    //         formatButton.text("Show Sections");
-    //     } else {
-    //         formatButton.text("Hide Sections");
-    //     }
-    //     updateItems();
-    // });
-
+    statusElement = $("#load-status")
     statsElement = $("#stats")
+}
+
+function beginLoading(game) {
+    console.log('begin loading', game);
+    var element = $("<div>");
+    var id = game.replace(" ", "-");
+    var label = $("<h1 class='label label-warning' id=" + id + ">")
+    label.text(game);
+    element.append(label);
+    statusElement.append(element);
+}
+
+function finishLoading(game) {
+    console.log("finish", game);
+    var id = game.replace(" ", "-");
+    var label = $("#" + id);
+    label.toggleClass("label-warning label-success");
 }
 
 function loadData(onLoadWorksheet) {
@@ -175,7 +157,7 @@ function loadData(onLoadWorksheet) {
     var key = "1-oPs_owy6LIv3ROirjysRz4Vvap7h7VLdHsglR9m0po";
     var format = '/public/full?alt=json-in-script';
 
-    function loadWorksheet(id) {
+    function loadWorksheet(id, onLoad) {
         var url = scope + '/list/' + key + '/' + id + format;
         var xhr = createCORSRequest('GET', url);
         xhr.open('GET', url);
@@ -186,25 +168,42 @@ function loadData(onLoadWorksheet) {
     	      console.log('There was an error!');
         };
 
-        xhr.onload = onLoadWorksheet(xhr);
+        xhr.onload = onLoad(xhr);
 
         xhr.send();
     }
 
-    var halos = [1, 2];
+    var games = [];
+    function onLoadInfo(xhr) {
+        return function () {
+    	      var responseText = xhr.responseText;
+	          var startGarbage = "data.io.handleScriptLoaded(";
+            var jsonString = responseText.slice(startGarbage.length + 1, -2);
+	          var jsonData = JSON.parse(jsonString).feed;
+            var entries = jsonData.entry;
+            for (var entryIndex = 0; entryIndex < entries.length; ++entryIndex) {
+                var entry = entries[entryIndex];
+                var game = entry.title.$t;
+                games.push(game);
+            }
 
-    for (var i = 0; i < halos.length; ++i) {
-        var halo = halos[i]
-        var id = halo + 1;
-        loadWorksheet(id);
+            for (var gameIndex = 0; gameIndex < games.length; ++gameIndex) {
+                 var gameName = games[gameIndex]
+                beginLoading(gameName);
+                var id = gameIndex + 2;
+                loadWorksheet(id, onLoadWorksheet);
+            }
+            console.log("games:", games);
+        }
     }
+    loadWorksheet(1, onLoadInfo);
 }
 
 function parseJsonData(jsonData) {
-    console.log('jsonData:', jsonData);
     var game = jsonData.title.$t;
+    finishLoading(game);
     data[game] = {};
-
+    return;
     columnNames = {};
     sectionMap = {};
     sections = [];
@@ -261,22 +260,25 @@ function parseJsonData(jsonData) {
     }
 
     newGame(game);
-    console.log(data);
+    console.log('done loading', game, data);
 }
 
-function onReady() {
-    initNav();
-
+function initData() {
     data = {};
     loadData(function(xhr) {
         return function () {
     	      var responseText = xhr.responseText;
 	          var startGarbage = "data.io.handleScriptLoaded(";
             var jsonString = responseText.slice(startGarbage.length + 1, -2);
-	          var data = JSON.parse(jsonString).feed;
-            parseJsonData(data);
+	          var jsonData = JSON.parse(jsonString).feed;
+            parseJsonData(jsonData);
         }
     });
+}
+
+function onReady() {
+    initNav();
+    initData();
 }
 
 $(document).ready(onReady);

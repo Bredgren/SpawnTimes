@@ -3,6 +3,8 @@ var mapMenu;
 var statusElement;
 var statsElement;
 var data;
+var loadCount;
+var loadMax;
 
 function createCORSRequest(method, url) {
   var xhr = new XMLHttpRequest();
@@ -50,12 +52,12 @@ function newOption(select, label) {
 }
 
 function newGame(label) {
-    newOption(gameSelect, label);
-    onChangeGame(gameSelect.val());
+    newOption(gameMenu, label);
+    onChangeGame(gameMenu.val());
 }
 
 function newMap(label) {
-    newOption(mapSelect, label);
+    newOption(mapMenu, label);
 }
 
 function newSection(label) {
@@ -92,8 +94,8 @@ function newItem(section, itemName, itemTime) {
 function updateItems() {
     statsElement.empty();
 
-    var game = gameSelect.val();
-    var map = mapSelect.val();
+    var game = gameMenu.val();
+    var map = mapMenu.val();
 
     var sections = data[game].sections;
     for (var sIndex = 0; sIndex < sections.length; ++sIndex) {
@@ -112,7 +114,7 @@ function updateItems() {
 }
 
 function onChangeGame(game) {
-    mapSelect.empty();
+    mapMenu.empty();
     gameData = data[game];
     for (map in gameData) {
         newMap(map);
@@ -135,21 +137,43 @@ function initNav() {
     statsElement = $("#stats")
 }
 
-function beginLoading(game) {
-    console.log('begin loading', game);
-    var element = $("<div>");
-    var id = game.replace(" ", "-");
-    var label = $("<h1 class='label label-warning' id=" + id + ">")
-    label.text(game);
-    element.append(label);
-    statusElement.append(element);
+function doneLoading() {
+    statusElement.empty();
+    console.log(data)
+    for (game in data) {
+        newGame(game);
+    }
 }
 
-function finishLoading(game) {
-    console.log("finish", game);
+function onLoadResult() {
+    loadCount++;
+    if (loadCount == loadMax) {
+        doneLoading();
+    }
+}
+
+function beginLoading(game) {
+    console.log('begin loading', game);
+    var id = game.replace(" ", "-");
+    var h = $("<h1>");
+    var label = $("<span class='label label-warning' id=" + id + ">")
+    label.text(game);
+    h.append(label);
+    statusElement.append(h);
+}
+
+function loadSuccess(game) {
     var id = game.replace(" ", "-");
     var label = $("#" + id);
     label.toggleClass("label-warning label-success");
+    onLoadResult();
+}
+
+function loadFail(game) {
+    var id = game.replace(" ", "-");
+    var label = $("#" + id);
+    label.toggleClass("label-warning label-danger");
+    onLoadResult();
 }
 
 function loadData(onLoadWorksheet) {
@@ -157,7 +181,7 @@ function loadData(onLoadWorksheet) {
     var key = "1-oPs_owy6LIv3ROirjysRz4Vvap7h7VLdHsglR9m0po";
     var format = '/public/full?alt=json-in-script';
 
-    function loadWorksheet(id, onLoad) {
+    function loadWorksheet(id, onLoad, game) {
         var url = scope + '/list/' + key + '/' + id + format;
         var xhr = createCORSRequest('GET', url);
         xhr.open('GET', url);
@@ -168,13 +192,13 @@ function loadData(onLoadWorksheet) {
     	      console.log('There was an error!');
         };
 
-        xhr.onload = onLoad(xhr);
+        xhr.onload = onLoad(xhr, game);
 
         xhr.send();
     }
 
     var games = [];
-    function onLoadInfo(xhr) {
+    function onLoadInfo(xhr, game) {
         return function () {
     	      var responseText = xhr.responseText;
 	          var startGarbage = "data.io.handleScriptLoaded(";
@@ -187,23 +211,24 @@ function loadData(onLoadWorksheet) {
                 games.push(game);
             }
 
+            loadMax = games.length;
+
             for (var gameIndex = 0; gameIndex < games.length; ++gameIndex) {
-                 var gameName = games[gameIndex]
+                var gameName = games[gameIndex]
                 beginLoading(gameName);
                 var id = gameIndex + 2;
-                loadWorksheet(id, onLoadWorksheet);
+                loadWorksheet(id, onLoadWorksheet, gameName);
             }
             console.log("games:", games);
         }
     }
-    loadWorksheet(1, onLoadInfo);
+    loadWorksheet(1, onLoadInfo, "Info");
 }
 
 function parseJsonData(jsonData) {
     var game = jsonData.title.$t;
-    finishLoading(game);
     data[game] = {};
-    return;
+
     columnNames = {};
     sectionMap = {};
     sections = [];
@@ -259,19 +284,24 @@ function parseJsonData(jsonData) {
         }
     }
 
-    newGame(game);
-    console.log('done loading', game, data);
+    // newGame(game);
 }
 
 function initData() {
+    loadCount = 0;
     data = {};
-    loadData(function(xhr) {
+    loadData(function(xhr, game) {
         return function () {
-    	      var responseText = xhr.responseText;
-	          var startGarbage = "data.io.handleScriptLoaded(";
-            var jsonString = responseText.slice(startGarbage.length + 1, -2);
-	          var jsonData = JSON.parse(jsonString).feed;
-            parseJsonData(jsonData);
+            if (xhr.status == 400) {
+                loadFail(game);
+            } else {
+                loadSuccess(game);
+    	          var responseText = xhr.responseText;
+	              var startGarbage = "data.io.handleScriptLoaded(";
+                var jsonString = responseText.slice(startGarbage.length + 1, -2);
+	              var jsonData = JSON.parse(jsonString).feed;
+                parseJsonData(jsonData);
+            }
         }
     });
 }

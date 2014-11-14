@@ -158,6 +158,14 @@ function doneLoading() {
 
 function onLoadResult() {
     loadCount++;
+
+    var percent = loadCount / loadMax * 100;
+    var progressBar = $("#loading-progress").find("div");
+    var span = progressBar.find("span");
+    progressBar.attr('aria-valuenow', loadCount);
+    progressBar.css('width', percent + '%');
+    span.text(percent + '% Complete');
+
     if (loadCount == loadMax) {
         doneLoading();
     }
@@ -166,11 +174,9 @@ function onLoadResult() {
 function beginLoading(game) {
     console.log('begin loading', game);
     var id = game.replace(" ", "-");
-    var h = $("<h1>");
     var label = $("<span class='label label-warning' id=" + id + ">")
     label.text(game);
-    h.append(label);
-    statusElement.append(h);
+    $("#games-loading").append(label);
 }
 
 function loadSuccess(game) {
@@ -225,6 +231,8 @@ function loadData(onLoadWorksheet) {
             }
 
             loadMax = games.length;
+	    var progressBar = $("#loading-progress");
+	    progressBar.attr('aria-valuemax', loadMax);
 
             for (var gameIndex = 0; gameIndex < games.length; ++gameIndex) {
                 var gameName = games[gameIndex]

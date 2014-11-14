@@ -8,15 +8,17 @@ body {
 }
 
 #container {
-
+    font-size: 5vw;
 }
 
 #nav {
     border-bottom: 3px solid #2573BE;
+    font-size: 5vw;
 }
 
 #nav select {
-    height: 30px;
+    font-size: 7vw;
+    height: 10vw;
     background: 0;
     color: #2573BE;
     border: 0px;
@@ -29,12 +31,36 @@ body {
 
 #format {
     color: #2573BE;
-    padding: 10px;
+    height: 3vw;
+    padding: 2vw;
     cursor: pointer;
-    border-right: 3px solid #2573BE;
+    border-right: 1vw solid #2573BE;
     -webkit-user-select: none;
 }
 
 #stats {
 
+}
+
+.section-title {
+    background: #2573BE;
+    padding: 2vw;
+}
+
+.item {
+    background: #40414C;
+    padding: 2vw;
+    font-size: 3vw;
+}
+
+.item:not(:last-child) {
+    border-bottom: 1vw solid #2573BE;
+}
+
+.item-name {
+
+}
+
+.item-time {
+    float: right;
 }

@@ -1,6 +1,6 @@
 var gameSelect;
 var mapSelect;
-var formatButton;
+// var formatButton;
 var statsElement;
 var data;
 
@@ -59,17 +59,30 @@ function newMap(label) {
 }
 
 function newSection(label) {
-    var section = $("<div>");
-    section.text(label);
-    $("#stats").append(section);
-    return section;
+    var section = $("<div class='section'>");
+    var title = $("<div class='section-title'>");
+    var sectionItems = $("<div class='section-items'>");
+
+    title.text(label);
+    title.click(function () {
+	if (sectionItems.is(":hidden")) {
+	    sectionItems.slideDown("fast");
+	} else {
+	    sectionItems.slideUp("fast");
+	}
+    })
+    section.append(title);
+    section.append(sectionItems);
+    statsElement.append(section);
+
+    return sectionItems;
 }
 
 function newItem(section, itemName, itemTime) {
-    var item = $("<div>");
-    var name = $("<span>");
+    var item = $("<div class='item'>");
+    var name = $("<span class='item-name'>");
     name.text(itemName);
-    var time = $("<span>");
+    var time = $("<span class='item-time'>");
     time.text(itemTime);
     item.append(name);
     item.append(time);
@@ -82,7 +95,8 @@ function updateItems() {
     var game = gameSelect.val();
     var map = mapSelect.val();
 
-    var showSections = formatButton.text().search("Hide") != -1;
+    // var showSections = formatButton.text().search("Hide") != -1;
+    var showSections = true;
     if (showSections) {
         var sections = data[game].sections;
         for (var sIndex = 0; sIndex < sections.length; ++sIndex) {
@@ -141,17 +155,17 @@ function initNav() {
     mapSelect = $("#map");
     mapSelect.change(function() { onChangeMap($(this).val()); });
 
-    formatButton = $("#format");
-    formatButton.click(function() {
-        console.log('click');
-        var hide = formatButton.text().search("Hide") != -1;
-        if (hide) {
-            formatButton.text("Show Sections");
-        } else {
-            formatButton.text("Hide Sections");
-        }
-        updateItems();
-    });
+    // formatButton = $("#format");
+    // formatButton.click(function() {
+    //     console.log('click');
+    //     var hide = formatButton.text().search("Hide") != -1;
+    //     if (hide) {
+    //         formatButton.text("Show Sections");
+    //     } else {
+    //         formatButton.text("Hide Sections");
+    //     }
+    //     updateItems();
+    // });
 
     statsElement = $("#stats")
 }

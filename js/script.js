@@ -22,23 +22,13 @@ function createCORSRequest(method, url) {
     return xhr;
 }
 
-// function sortItems(menu) {
-//     var items = $(menu.selector + " option");
-//     items.sort(function(a,b) {
-//         if (a.text > b.text) return 1;
-//         else if (a.text < b.text) return -1;
-//         else return 0
-//     });
-//     menu.empty().append(items);
-//     menu.val(items[0].value);
-// }
-
 // Yeah, this "main" thing is kinda dirty. But I suck with Javascript. Should have
 // used CoffeScript.
 var main;
 var loader;
 /*
 Data format: {
+  lastSync: <date>,
   selectedGame: <GameName>,
   games: {
     <GameName>: {
@@ -82,9 +72,6 @@ StatusArea.prototype._delElement = function() {
     if (this._activeElements == 0) {
         this._element.slideUp();
     }
-}
-
-StatusArea.prototype.newWarning = function(text) {
 }
 
 StatusArea.prototype.startLoading = function(max, onLoad) {
@@ -192,6 +179,9 @@ var Main = function() {
     this._statusArea = new StatusArea();
     this._statsArea = new StatsArea();
     this._setMapListeners = [ this._statsArea ];
+
+    this._syncButton = $("#sync-btn");
+    this._syncButton.click(function() { main.sync(); });
 }
 
 function getSortedKeys(obj) {
@@ -205,10 +195,11 @@ function getSortedKeys(obj) {
 
 Main.prototype.init = function(game) {
     var loaded = function() {
-	      console.log("loaded", main._data);
+        main._data.lastSync = main._syncDate;
 	      main._saveData();
 
 	      // Populate selects
+        main._gameSelect.empty();
         var games = getSortedKeys(main._data.games);
         for (var i = 0; i < games.length; ++i) {
 	          main._gameSelect.append($("<option>").text(games[i]));
@@ -227,15 +218,13 @@ Main.prototype.init = function(game) {
 	      this._usingLocalStorage = true;
 	      this._data = localStorage["data"]
 	      if (!this._data) {
-	          this._initData(loaded);
-	          this._statusArea.newWarning("Hello");
+	          this._initData(loaded, true);
 	      } else {
-	          this._data = JSON.parse(this._data);
-            loaded();
+            this._initData(loaded, false);
 	      }
     } else {
 	      this._statusArea.newWarning("Local Storage not supported in this browser.");
-	      this._initData(loaded);
+	      this._initData(loaded, true);
     }
 }
 
@@ -270,23 +259,72 @@ Main.prototype.setSectionOpen = function(section, open) {
 }
 
 Main.prototype.sync = function() {
-    // remember current selected game, selected map, section states
-    // clobber data
-    // sync all to init data and local storage
-    var done = function() {
+    var temp = {};
+    temp.selectedGame = this._data.selectedGame;
+    temp.games = {};
+    for (game in this._data.games) {
+        temp.games[game] = {};
+        var gameObj = temp.games[game];
+        gameObj.selectedMap = this._data.games[game].selectedMap;
+        gameObj.maps = {};
+        for (map in this._data.games[game].maps) {
+            gameObj.maps[map] = {};
+            var mapObj = gameObj.maps[map];
+            mapObj.sections = {};
+            for (section in this._data.games[game].maps[map].sections) {
+                var open = this._data.games[game].maps[map].sections[section].open;
+                mapObj.sections[section] = {}
+                mapObj.sections[section].open = open;
+            }
+        }
     }
-    this._initData(done);
-    // restore selected game, selected map, section states
-    // refresh stats area
+
+    var loaded = function() {
+        main._data.selectedGame = temp.selectedGame;
+        for (game in temp.games) {
+            var gameObj = main._data.games[game];
+            gameObj.selectedMap = temp.games[game].selectedMap;
+            for (map in temp.games[game].maps) {
+                var mapObj = gameObj.maps[map];
+                for (section in temp.games[game].maps[map].sections) {
+                    var open = temp.games[game].maps[map].sections[section].open;
+                    mapObj.sections[section].open = open;
+                }
+            }
+        }
+
+        main._data.lastSync = main._syncDate;
+	      main._saveData();
+        main._syncButton.hide();
+
+	      // Populate selects
+        main._gameSelect.empty();
+        var games = getSortedKeys(main._data.games);
+        for (var i = 0; i < games.length; ++i) {
+	          main._gameSelect.append($("<option>").text(games[i]));
+        }
+        var maps = getSortedKeys(main._data.games[main._data.selectedGame].maps);
+        for (var i = 0; i < maps.length; ++i) {
+	          main._mapSelect.append($("<option>").text(maps[i]));
+        }
+
+	      // Select inital values
+	      main.setGame(main._data.selectedGame);
+    }
+
+    this._initData(loaded, true);
 }
 
-Main.prototype._initData = function(onDoneCallback) {
-    console.log("initData");
-    this._data = {};
-    this._data.games = {};
+Main.prototype._initData = function(onDoneCallback, loadAll) {
+    if (loadAll) {
+        this._data = {};
+        this._data.games = {};
+    } else {
+	      this._data = JSON.parse(this._data);
+        this._syncDate = this._data.lastSync;
+    }
 
     function handleGameWorksheet(json) {
-	      console.log("handleGameWorksheet", json);
 	      var game = json.title.$t;
 	      main._data.games[game] = {};
         var gameObj = main._data.games[game];
@@ -356,30 +394,34 @@ Main.prototype._initData = function(onDoneCallback) {
             }
 	      }
         gameObj.selectedMap = maps[0];
-	      main._saveData();
         main._statusArea.incrementLoad(1);
     }
 
     function handleInfoWorksheet(json) {
-	      console.log("handleInfoWorksheet", json);
-	      var games = [];
-        var entries = json.entry;
-        for (var entryIndex = 0; entryIndex < entries.length; ++entryIndex) {
-            games.push(entries[entryIndex].title.$t);
+        main._syncDate = json.updated.$t;
+        if (main._data.lastSync != main._syncDate) {
+            main._syncButton.show();
         }
+        if (loadAll) {
+	          var games = [];
+            var entries = json.entry;
+            for (var entryIndex = 0; entryIndex < entries.length; ++entryIndex) {
+                games.push(entries[entryIndex].title.$t);
+            }
 
-        main._statusArea.startLoading(games.length, onDoneCallback);
-        main._data.selectedGame = games[0];
+            main._statusArea.startLoading(games.length, onDoneCallback);
+            main._data.selectedGame = games[0];
 
-        for (var gameIndex = 0; gameIndex < games.length; ++gameIndex) {
-            var gameName = games[gameIndex]
-            var id = gameIndex + 2;
-            loadWorksheet(id, handleGameWorksheet, gameName);
+            for (var gameIndex = 0; gameIndex < games.length; ++gameIndex) {
+                var gameName = games[gameIndex]
+                var id = gameIndex + 2;
+                loadWorksheet(id, handleGameWorksheet, gameName);
+            }
         }
     }
 
     function handleError(game) {
-	      console.log("Error loading", game);
+	      console.log("Error: Unable to load", game);
         main._statusArea.incrementLoad(1);
     };
 
@@ -411,6 +453,9 @@ Main.prototype._initData = function(onDoneCallback) {
     }
 
     loadWorksheet(1, handleInfoWorksheet, "Info");
+    if (!loadAll) {
+        onDoneCallback();
+    }
 }
 
 Main.prototype._saveData = function() {

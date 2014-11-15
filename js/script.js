@@ -418,7 +418,7 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
             for (var gameIndex = 0; gameIndex < games.length; ++gameIndex) {
                 var gameName = games[gameIndex]
                 var id = gameIndex + 2;
-                loadWorksheet(id, handleGameWorksheet, gameName);
+                loadWorksheet(id, handleGameWorksheet, handleError);
             }
         } else if (main._data.lastSync != main._syncDate) {
             main._syncButton.show();
@@ -430,7 +430,7 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
         main._statusArea.incrementLoad(1);
     };
 
-    function loadWorksheet(id, onLoad, onError, game) {
+    function loadWorksheet(id, onLoad, onError) {
 	      var scope = 'https://spreadsheets.google.com/feeds';
 	      var key = "1-oPs_owy6LIv3ROirjysRz4Vvap7h7VLdHsglR9m0po";
 	      var format = '/public/full?alt=json-in-script';
@@ -457,7 +457,7 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
         xhr.send();
     }
 
-    loadWorksheet(1, handleInfoWorksheet, "Info");
+    loadWorksheet(1, handleInfoWorksheet, handleError);
     if (!loadAll) {
         onDoneCallback();
     }

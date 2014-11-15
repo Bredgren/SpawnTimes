@@ -1,13 +1,3 @@
-// TODO:
-//  - lazy loading
-//  - caching (local storage)
-//  - Allow resyncing for each game
-//  - Remeber which game and map the user was last at
-//  - Remeber sectiosn where opened/closed for each map
-//  - Only attempt to auto sync if no local data
-//  - Button to check for changes and resync all
-//    - store/chcek worksheet modified times
-
 var gameMenu;
 var mapMenu;
 var statusElement;
@@ -17,27 +7,27 @@ var loadCount;
 var loadMax;
 
 function createCORSRequest(method, url) {
-  var xhr = new XMLHttpRequest();
-  if ("withCredentials" in xhr) {
+    var xhr = new XMLHttpRequest();
+    if ("withCredentials" in xhr) {
 
-    // Check if the XMLHttpRequest object has a "withCredentials" property.
-    // "withCredentials" only exists on XMLHTTPRequest2 objects.
-    xhr.open(method, url, true);
+        // Check if the XMLHttpRequest object has a "withCredentials" property.
+        // "withCredentials" only exists on XMLHTTPRequest2 objects.
+        xhr.open(method, url, true);
 
-  } else if (typeof XDomainRequest != "undefined") {
+    } else if (typeof XDomainRequest != "undefined") {
 
-    // Otherwise, check if XDomainRequest.
-    // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
-    xhr = new XDomainRequest();
-    xhr.open(method, url);
+        // Otherwise, check if XDomainRequest.
+        // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+        xhr = new XDomainRequest();
+        xhr.open(method, url);
 
-  } else {
+    } else {
 
-    // Otherwise, CORS is not supported by the browser.
-    xhr = null;
+        // Otherwise, CORS is not supported by the browser.
+        xhr = null;
 
-  }
-  return xhr;
+    }
+    return xhr;
 }
 
 function sortItems(menu) {
@@ -81,11 +71,11 @@ function newPanel(label) {
 
     heading.text(label);
     heading.click(function () {
-	if (body.is(":hidden")) {
-	    body.slideDown("fast");
-	} else {
-	    body.slideUp("fast");
-	}
+	      if (body.is(":hidden")) {
+	          body.slideDown("fast");
+	      } else {
+	          body.slideUp("fast");
+	      }
     })
     panel.append(heading);
     panel.append(body);
@@ -180,8 +170,8 @@ function loadFail(game) {
     var id = game.replace(" ", "-");
     var label = $("#" + id);
     if (label.hasClass("label-warning")) {
-	label.toggleClass("label-warning label-danger");
-	onLoadResult();
+	      label.toggleClass("label-warning label-danger");
+	      onLoadResult();
     }
 }
 
@@ -198,7 +188,7 @@ function loadData(onLoadWorksheet) {
     	      throw new Error('CORS not supported');
         }
         xhr.onerror = function() {
-                loadFail(game);
+            loadFail(game);
         };
 
         xhr.onload = onLoad(xhr, game);
@@ -221,8 +211,8 @@ function loadData(onLoadWorksheet) {
             }
 
             loadMax = games.length;
-	    var progressBar = $("#loading-progress");
-	    progressBar.attr('aria-valuemax', loadMax);
+	          var progressBar = $("#loading-progress");
+	          progressBar.attr('aria-valuemax', loadMax);
 
             for (var gameIndex = 0; gameIndex < games.length; ++gameIndex) {
                 var gameName = games[gameIndex]
@@ -303,10 +293,10 @@ function initData() {
             if (xhr.status != 200) {
                 loadFail(game);
             } else {
-    	        var responseText = xhr.responseText;
-	        var startGarbage = "data.io.handleScriptLoaded(";
+    	          var responseText = xhr.responseText;
+	              var startGarbage = "data.io.handleScriptLoaded(";
                 var jsonString = responseText.slice(startGarbage.length + 1, -2);
-	        var jsonData = JSON.parse(jsonString).feed;
+	              var jsonData = JSON.parse(jsonString).feed;
                 parseJsonData(jsonData);
                 loadSuccess(game);
             }
@@ -330,40 +320,75 @@ function onReady() {
 
 // $(document).ready(onReady);
 
+// Yeah, this "main" thing is kinda dirty. But I suck with Javascript. Should have
+// used CoffeScript.
 var main;
+var loader;
 /*
-Data format:
-selectedGame: <GameName>,
-<GameName>: {
-  selectedMap: <MapName>,
-  <MapName>: {
-    sectionOrder: [<SectionName>, ...],
-    <SectionName>: {
-      open: <bool>,
-      items: {
-        <ItemName>: <ItemValue>,
+Data format: {
+  selectedGame: <GameName>,
+  games: {
+    <GameName>: {
+      selectedMap: <MapName>,
+      sectionOrder: [<SectionName>, ...],
+      maps: {
+        <MapName>: {
+          sections: {
+            <SectionName>: {
+              open: <bool>,
+              items: {
+                <ItemName>: <ItemValue>,
+                ...
+              }
+            },
+            ...
+          }
+        },
         ...
       }
-    }
+    },
     ...
-  },
-  ...
+  }
 }
 */
 
+/*******************************/
+var Loader = function(onLoad) {
+    this._max = 0;
+    this._current = 0;
+    this._onLoad = onLoad;
+}
+
+Loader.prototype.setMax = function(max) {
+    this._max = max;
+}
+
+Loader.prototype.getProgress = function() {
+    return this._current / this._max;
+}
+
+Loader.prototype.increment = function(amount) {
+    this._current += amount;
+    console.log('increment', this._current);
+    if (this._current >= this._max) {
+        this._onLoad();
+    }
+}
+
+/*******************************/
 var StatusArea = function() {
     this._element = $("#status");
 
 }
 
+/*******************************/
 var StatsArea = function() {
     this._element = $("#stats");
-
 }
 
 StatsArea.prototype.onMapChange = function(data) {
     var game = data.selectedGame;
-    var map = data[game].selectedMap;
+    var map = data.games[game].selectedMap;
     console.log("StatsArea map change", map);
 }
 
@@ -379,11 +404,11 @@ StatsArea.prototype.newPanel = function(title, data) {
 
     heading.text(label);
     heading.click(function () {
-	if (body.is(":hidden")) {
-	    body.slideDown("fast");
-	} else {
-	    body.slideUp("fast");
-	}
+	      if (body.is(":hidden")) {
+	          body.slideDown("fast");
+	      } else {
+	          body.slideUp("fast");
+	      }
     })
     panel.append(heading);
     panel.append(body);
@@ -405,52 +430,76 @@ var Main = function() {
     this._gameSelect = $("#game");
     this._mapSelect = $("#map");
 
-    // Yeah, this "main" thing is kinda dirty. Oh well.
     this._gameSelect.change(function() { main.setGame($(this).val()); });
     this._mapSelect.change(function() { main.setMap($(this).val()); });
 
     this._statusArea = new StatusArea();
     this._statsArea = new StatsArea();
     this._setMapListeners = [ this._statsArea ];
+}
 
+function getSortedKeys(obj) {
+    var keys = [];
+    for (key in obj) {
+        keys.push(key);
+    }
+    keys.sort();
+    return keys;
+}
 
+Main.prototype.init = function(game) {
     var loaded = function() {
-	console.log("loaded", this._data);
-	this._saveData();
+	      console.log("loaded", main._data);
+	      main._saveData();
 
-	// Populate selects
-	this._gameSelect.append($("<option>").text("abc"));
-	this._gameSelect.append($("<option>").text("def"));
+	      // Populate selects
+        var games = getSortedKeys(main._data.games);
+        for (var i = 0; i < games.length; ++i) {
+	          main._gameSelect.append($("<option>").text(games[i]));
+        }
+        var maps = getSortedKeys(main._data.games[main._data.selectedGame].maps);
+        for (var i = 0; i < maps.length; ++i) {
+	          main._mapSelect.append($("<option>").text(maps[i]));
+        }
 
-	// Select inital values
-	this._gameSelect.val(this._data.selectedGame);
-	this.setGame(this._gameSelect.val());
+	      // Select inital values
+	      main.setGame(main._data.selectedGame);
     }
 
     this._usingLocalStorage = false;
     if(typeof(Storage) !== "undefined") {
-	this._usingLocalStorage = true;
-	this._data = localStorage["data"]
-	if (!this._data) {
-	    this._initData(loaded);
-	} else {
-	    this._data = JSON.parse(this._data);
-	}
+	      this._usingLocalStorage = true;
+	      this._data = localStorage["data"]
+	      if (!this._data) {
+	          this._initData(loaded);
+	      } else {
+	          this._data = JSON.parse(this._data);
+            loaded();
+	      }
     } else {
-	this._statusArea.setWarning("Local Storage not supported in this browser.");
-	this._initData(loaded);
+	      this._statusArea.setWarning("Local Storage not supported in this browser.");
+	      this._initData(loaded);
     }
 }
 
 Main.prototype.setGame = function(game) {
     this._data.selectedGame = game;
+	  this._gameSelect.val(game);
     this._saveData();
-    this.setMap(this._data[game].selectedMap);
+    this.setMap(this._data.games[game].selectedMap);
 }
 
 Main.prototype.setMap = function(map) {
     var game = this._data.selectedGame;
-    this._data[game].selectedMap = map;
+
+    this._mapSelect.empty();
+    var maps = getSortedKeys(this._data.games[game].maps);
+    for (var i = 0; i < maps.length; ++i) {
+	      this._mapSelect.append($("<option>").text(maps[i]));
+    }
+
+    this._data.games[game].selectedMap = map;
+	  this._mapSelect.val(map);
     this._saveData();
     for (var i = 0; i < this._setMapListeners.length; ++i) {
         this._setMapListeners[i].onMapChange(this._data);
@@ -458,94 +507,112 @@ Main.prototype.setMap = function(map) {
 }
 
 Main.prototype.setSectionOpen = function(open) {
- // store new state for the section
- // show/hide section
+    // store new state for the section
+    // show/hide section
 }
 
 Main.prototype.sync = function() {
-  // remember current selected game, selected map, section states
-  // clobber data
-  // sync all to init data and local storage
+    // remember current selected game, selected map, section states
+    // clobber data
+    // sync all to init data and local storage
     var done = function() {
     }
     this._initData(done);
-  // restore selected game, selected map, section states
-  // refresh stats area
+    // restore selected game, selected map, section states
+    // refresh stats area
 }
 
 Main.prototype._initData = function(onDoneCallback) {
     console.log("initData");
     this._data = {};
+    this._data.games = {};
+    loader = new Loader(onDoneCallback);
 
     function handleGameWorksheet(json) {
-	console.log("handleGameWorksheet", json);
-	var game = json.title.$t;
-	main._data[game] = {};
+	      console.log("handleGameWorksheet", json);
+	      var game = json.title.$t;
+	      main._data.games[game] = {};
+        var gameObj = main._data.games[game];
+        gameObj.maps = {}
 
-	columnNames = {};
-	sectionMap = {};
-	sections = [];
-	for (var entryIndex = 0; entryIndex < json.entry.length; ++entryIndex) {
+	      var columnNames = {};
+	      var sectionMap = {};
+	      var sections = [];
+        var maps = [];
+	      for (var entryIndex = 0; entryIndex < json.entry.length; ++entryIndex) {
             var entry = json.entry[entryIndex];
             var map = entry.title.$t;
             var content = entry.content.$t;
             var items = content.split(", ");
 
             if (map == "column") {
-		for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+		            for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
                     var item = items[itemIndex];
                     var itemContent = item.split(": ");
                     var columnKey = itemContent[0];
                     var columnName = itemContent[1];
                     columnNames[columnKey] = columnName;
-		}
-		continue;
+		            }
+		            continue;
             } else if (map == "section") {
-		for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+		            for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
                     var item = items[itemIndex];
                     var itemContent = item.split(": ");
                     var columnName = columnNames[itemContent[0]];
                     var sectionName = itemContent[1];
                     sectionMap[columnName] = sectionName;
-		}
-		continue;
+		            }
+		            continue;
             } else if (map == "sections") {
-		for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+		            for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
                     var item = items[itemIndex];
                     var itemContent = item.split(": ");
                     var sectionName = itemContent[1];
                     sections.push(sectionName);
-		}
-		main._data[game].sectionOrder = sections;
-		continue;
+		            }
+                gameObj.sectionOrder = sections;
+		            continue;
             }
+            maps.push(map);
 
-            main._data[game][map] = {};
+            gameObj.maps[map] = {}
+            var mapObj = gameObj.maps[map];
+            mapObj.sections = {};
+
             for (var i = 0; i < sections.length; ++i) {
-		main._data[game][map][sections[i]] = {}
+                var sectionName = sections[i];
+		            mapObj.sections[sectionName] = {}
+                var section = mapObj.sections[sectionName];
+                section.open = false;
+                section.items = {};
             }
             for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
-		var item = items[itemIndex];
-		var itemContent = item.split(": ");
-		var name = columnNames[itemContent[0]];
-		if (name == undefined) {
-                    console.log("Error: No translation for '" + itemContent[0] + "'");
+		            var item = items[itemIndex];
+		            var itemContent = item.split(": ");
+		            var name = columnNames[itemContent[0]];
+		            if (name == undefined) {
                     name = itemContent[0];
-		}
-		var time = itemContent[1];
-		main._data[game][map][sectionMap[name]][name] = time;
+                    console.log("Warning: No translation for '" + name + "'");
+		            }
+		            var time = itemContent[1];
+		            mapObj.sections[sectionMap[name]].items[name] = time;
             }
-	}
-	main._saveData();
+	      }
+        gameObj.selectedMap = maps[0];
+	      main._saveData();
+        loader.increment(1);
     }
 
     function handleInfoWorksheet(json) {
-	console.log("handleInfoWorksheet", json);
-	var games = [];
+	      console.log("handleInfoWorksheet", json);
+	      var games = [];
         var entries = json.entry;
         for (var entryIndex = 0; entryIndex < entries.length; ++entryIndex) {
             games.push(entries[entryIndex].title.$t);
         }
+
+        loader.setMax(games.length);
+        main._data.selectedGame = games[0];
 
         for (var gameIndex = 0; gameIndex < games.length; ++gameIndex) {
             var gameName = games[gameIndex]
@@ -555,13 +622,14 @@ Main.prototype._initData = function(onDoneCallback) {
     }
 
     function handleError(game) {
-	console.log("error loading", game);
+	      console.log("Error loading", game);
+        loader.increment(1);
     };
 
     function loadWorksheet(id, onLoad, onError, game) {
-	var scope = 'https://spreadsheets.google.com/feeds';
-	var key = "1-oPs_owy6LIv3ROirjysRz4Vvap7h7VLdHsglR9m0po";
-	var format = '/public/full?alt=json-in-script';
+	      var scope = 'https://spreadsheets.google.com/feeds';
+	      var key = "1-oPs_owy6LIv3ROirjysRz4Vvap7h7VLdHsglR9m0po";
+	      var format = '/public/full?alt=json-in-script';
         var url = scope + '/list/' + key + '/' + id + format;
         var xhr = createCORSRequest('GET', url);
         xhr.open('GET', url);
@@ -571,14 +639,16 @@ Main.prototype._initData = function(onDoneCallback) {
         xhr.onerror = onError;
 
         xhr.onload = function() {
-	    if (xhr.status == 200) {
-    		var responseText = xhr.responseText;
-		var startGarbage = "data.io.handleScriptLoaded(";
-		var jsonString = responseText.slice(startGarbage.length + 1, -2);
-		var jsonData = JSON.parse(jsonString).feed;
-		onLoad(jsonData);
-	    }
-	}
+	          if (xhr.status == 200) {
+    		        var responseText = xhr.responseText;
+		            var startGarbage = "data.io.handleScriptLoaded(";
+		            var jsonString = responseText.slice(startGarbage.length + 1, -2);
+		            var jsonData = JSON.parse(jsonString).feed;
+		            onLoad(jsonData);
+	          } else {
+                loader.increment(1);
+            }
+	      }
 
         xhr.send();
     }
@@ -588,7 +658,7 @@ Main.prototype._initData = function(onDoneCallback) {
 
 Main.prototype._saveData = function() {
     if (this._usingLocalStorage) {
-	localStorage["data"] = JSON.stringify(this._data);
+	      localStorage["data"] = JSON.stringify(this._data);
     }
 }
 
@@ -598,4 +668,5 @@ Main.prototype._refreshStatsArea = function() {
 
 $(document).ready(function() {
     main = new Main();
+    main.init();
 });

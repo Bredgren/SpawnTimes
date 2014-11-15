@@ -23,3 +23,8 @@
         padding-top: 15px;
     }
 }
+
+.panel-heading {
+    -webkit-user-select: none;
+    cursor: pointer;
+}

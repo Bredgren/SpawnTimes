@@ -259,6 +259,11 @@ Main.prototype.setSectionOpen = function(section, open) {
 }
 
 Main.prototype.sync = function() {
+    if (this._syncing) {
+        return;
+    }
+    this._syncing = true;
+
     var temp = {};
     temp.selectedGame = this._data.selectedGame;
     temp.games = {};
@@ -296,6 +301,7 @@ Main.prototype.sync = function() {
         main._data.lastSync = main._syncDate;
 	      main._saveData();
         main._syncButton.hide();
+        this._syncing = false;
 
 	      // Populate selects
         main._gameSelect.empty();
@@ -399,9 +405,6 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
 
     function handleInfoWorksheet(json) {
         main._syncDate = json.updated.$t;
-        if (main._data.lastSync != main._syncDate) {
-            main._syncButton.show();
-        }
         if (loadAll) {
 	          var games = [];
             var entries = json.entry;
@@ -417,6 +420,8 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
                 var id = gameIndex + 2;
                 loadWorksheet(id, handleGameWorksheet, gameName);
             }
+        } else if (main._data.lastSync != main._syncDate) {
+            main._syncButton.show();
         }
     }
 

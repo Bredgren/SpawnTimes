@@ -28,3 +28,13 @@
     -webkit-user-select: none;
     cursor: pointer;
 }
+
+#info-button {
+    float: right;
+    border-radius: 0px;
+    border-bottom-left-radius: 20px;
+}
+
+#info-section {
+    padding-top: 15px;
+}

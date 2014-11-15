@@ -1,3 +1,4 @@
+
 function createCORSRequest(method, url) {
     var xhr = new XMLHttpRequest();
     if ("withCredentials" in xhr) {
@@ -25,7 +26,7 @@ function createCORSRequest(method, url) {
 // Yeah, this "main" thing is kinda dirty. But I suck with Javascript. Should have
 // used CoffeScript.
 var main;
-var loader;
+var LOCAL_STORAGE_NAME = "spawnTimeData";
 /*
 Data format: {
   lastSync: <date>,
@@ -216,7 +217,7 @@ Main.prototype.init = function(game) {
     this._usingLocalStorage = false;
     if(typeof(Storage) !== "undefined") {
 	      this._usingLocalStorage = true;
-	      this._data = localStorage["data"]
+	      this._data = localStorage[LOCAL_STORAGE_NAME]
 	      if (!this._data) {
 	          this._initData(loaded, true);
 	      } else {
@@ -465,7 +466,7 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
 
 Main.prototype._saveData = function() {
     if (this._usingLocalStorage) {
-	      localStorage["data"] = JSON.stringify(this._data);
+	      localStorage[LOCAL_STORAGE_NAME] = JSON.stringify(this._data);
     }
 }
 
@@ -477,3 +478,14 @@ $(document).ready(function() {
     main = new Main();
     main.init();
 });
+
+
+$("#info-button").click(function() {
+    console.log("click");
+    var infoSection = $("#info-section");
+	  if (infoSection.is(":hidden")) {
+	      infoSection.slideDown("fast");
+	  } else {
+	      infoSection.slideUp("fast");
+	  }
+})

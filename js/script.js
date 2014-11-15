@@ -386,28 +386,34 @@ var StatsArea = function() {
     this._element = $("#stats");
 }
 
-StatsArea.prototype.onMapChange = function(data) {
-    var game = data.selectedGame;
-    var map = data.games[game].selectedMap;
-    console.log("StatsArea map change", map);
+StatsArea.prototype.onMapChange = function(sections) {
+    this.clear();
+    for (section in sections) {
+        this.newPanel(section, sections[section]);
+    }
 }
 
 StatsArea.prototype.clear = function() {
     this._element.empty();
 }
 
-StatsArea.prototype.newPanel = function(title, data) {
+StatsArea.prototype.newPanel = function(title, section) {
+    var open = section.open;
+    var items = section.items;
+
     // Setup panel
     var panel = $("<div class='panel panel-primary'>");
     var heading = $("<div class='panel-heading'>");
     var body = $("<div class='panel-body'>");
 
-    heading.text(label);
+    heading.text(title);
     heading.click(function () {
 	      if (body.is(":hidden")) {
 	          body.slideDown("fast");
+            main.setSectionOpen(section, true);
 	      } else {
 	          body.slideUp("fast");
+            main.setSectionOpen(section, false);
 	      }
     })
     panel.append(heading);
@@ -416,12 +422,16 @@ StatsArea.prototype.newPanel = function(title, data) {
 
     // Add items to new panel
     var count = 0;
-    for (item in data) {
+    for (item in items) {
         count++;
         newItem(panel.find(".panel-body"), item, items[item]);
     }
     if (count == 0) {
         panel.remove()
+    } else {
+        if (!open) {
+            body.slideUp("fast");
+        }
     }
 }
 
@@ -501,14 +511,15 @@ Main.prototype.setMap = function(map) {
     this._data.games[game].selectedMap = map;
 	  this._mapSelect.val(map);
     this._saveData();
+    var sections = this._data.games[game].maps[map].sections
     for (var i = 0; i < this._setMapListeners.length; ++i) {
-        this._setMapListeners[i].onMapChange(this._data);
+        this._setMapListeners[i].onMapChange(sections);
     }
 }
 
-Main.prototype.setSectionOpen = function(open) {
-    // store new state for the section
-    // show/hide section
+Main.prototype.setSectionOpen = function(section, open) {
+    section.open = open;
+    this._saveData();
 }
 
 Main.prototype.sync = function() {
@@ -583,7 +594,7 @@ Main.prototype._initData = function(onDoneCallback) {
                 var sectionName = sections[i];
 		            mapObj.sections[sectionName] = {}
                 var section = mapObj.sections[sectionName];
-                section.open = false;
+                section.open = true;
                 section.items = {};
             }
             for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {

@@ -220,6 +220,7 @@ Main.prototype.init = function(game) {
 	      if (!this._data) {
 	          this._initData(loaded, true);
 	      } else {
+	          this._data = JSON.parse(this._data);
             this._initData(loaded, false);
 	      }
     } else {
@@ -326,7 +327,6 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
         this._data = {};
         this._data.games = {};
     } else {
-	      this._data = JSON.parse(this._data);
         this._syncDate = this._data.lastSync;
     }
 

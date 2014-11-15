@@ -290,6 +290,9 @@ Main.prototype.sync = function() {
         main._data.selectedGame = temp.selectedGame;
         for (game in temp.games) {
             var gameObj = main._data.games[game];
+            if (!gameObj) {
+                continue;
+            }
             gameObj.selectedMap = temp.games[game].selectedMap;
             for (map in temp.games[game].maps) {
                 var mapObj = gameObj.maps[map];
@@ -333,6 +336,11 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
 
     function handleGameWorksheet(json) {
 	      var game = json.title.$t;
+        if (!json.entry) {
+            console.log("Warning: No data for " + game);
+            main._statusArea.incrementLoad(1);
+            return;
+        }
 	      main._data.games[game] = {};
         var gameObj = main._data.games[game];
         gameObj.maps = {}
@@ -481,11 +489,15 @@ $(document).ready(function() {
 
 
 $("#info-button").click(function() {
-    console.log("click");
     var infoSection = $("#info-section");
 	  if (infoSection.is(":hidden")) {
 	      infoSection.slideDown("fast");
 	  } else {
 	      infoSection.slideUp("fast");
 	  }
+})
+
+$("#clean-button").click(function() {
+    localStorage.removeItem(LOCAL_STORAGE_NAME);
+    location.reload();
 })

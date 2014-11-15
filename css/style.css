@@ -38,3 +38,8 @@
 #info-section {
     padding-top: 15px;
 }
+
+#clean-button {
+    margin: auto;
+    display: block;
+}

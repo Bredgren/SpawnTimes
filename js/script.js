@@ -435,7 +435,7 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
     }
 
     function handleError(game) {
-	      console.log("Error: Unable to load", game);
+	      console.log("Warning: Unable to load", game);
         main._statusArea.incrementLoad(1);
     };
 

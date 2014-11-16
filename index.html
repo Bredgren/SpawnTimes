@@ -22,6 +22,7 @@
     <button type="button" class="btn btn-xs" id="info-button">i</button>
     <div class="container" id="info-section" style="display: none;">
       <div class="well" id="info-well">
+        <h1>Info</h1>
         <p>
           This app loads data from <a href="https://docs.google.com/spreadsheets/d/1-oPs_owy6LIv3ROirjysRz4Vvap7h7VLdHsglR9m0po/edit#gid=0">this</a>
           Google Doc spreadsheet and caches it in the browser's local storage. A "sync"
@@ -31,15 +32,23 @@
           If you find any wrong or missing infomation feel free to leave a comment
           on the Google Doc.
         </p>
-        <p>
-          If there seems to be a problem with loading the data you can push this
-          button to erase the cache and refresh the page.<br>
-          <button type="button" class="btn btn-danger" id="clean-button">Clean</button>
-          If there is still problem then it may be because of the format of the
-          spreadsheet. This is the one downside to always up-to-date: you can sync
-          before the format of the data is correct. You'll just have to wait at that
-          point.
-        </p>
+        <h1>Help</h1>
+        <h3>Loading bar stuck?</h3>
+        <ol>
+          <li>
+            Sometimes it loads quickly and sometimes it can take several seconds.
+            If it's taking longer try reloading the page and syncing again.
+          </li>
+          <li>
+            If it continues to get stuck try this reset button:<br>
+            <button type="button" class="btn btn-danger" id="clean-button">Reset</button>
+          </li>
+          <li>
+            If that still doesn't fix it then check your browser's developer console
+            for errors and report them to me. There may be a bug or the formatting
+            on the spreadsheet could be messed up.
+          </li>
+        </ol>
       </div>
     </div>
     <div class="container">
@@ -69,6 +78,9 @@
 	      <h4 id="games-loading"></h4>
       </div>
       <div id="stats"></div>
+      <p>
+        * Timer starts when weapon "disappears"
+      </p>
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->

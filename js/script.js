@@ -111,7 +111,7 @@ var StatsArea = function() {
 
 StatsArea.prototype.onMapChange = function(sections) {
     this.clear();
-    for (section in sections) {
+    for (var section in sections) {
         this.newPanel(section, sections[section]);
     }
 }
@@ -155,7 +155,7 @@ StatsArea.prototype.newPanel = function(title, section) {
 
     // Add items to new panel
     var count = 0;
-    for (item in items) {
+    for (var item in items) {
         count++;
         this.newItem(panel.find(".panel-body"), item, items[item]);
     }
@@ -187,7 +187,7 @@ var Main = function() {
 
 function getSortedKeys(obj) {
     var keys = [];
-    for (key in obj) {
+    for (var key in obj) {
         keys.push(key);
     }
     keys.sort();
@@ -269,16 +269,16 @@ Main.prototype.sync = function() {
     var temp = {};
     temp.selectedGame = this._data.selectedGame;
     temp.games = {};
-    for (game in this._data.games) {
+    for (var game in this._data.games) {
         temp.games[game] = {};
         var gameObj = temp.games[game];
         gameObj.selectedMap = this._data.games[game].selectedMap;
         gameObj.maps = {};
-        for (map in this._data.games[game].maps) {
+        for (var map in this._data.games[game].maps) {
             gameObj.maps[map] = {};
             var mapObj = gameObj.maps[map];
             mapObj.sections = {};
-            for (section in this._data.games[game].maps[map].sections) {
+            for (var section in this._data.games[game].maps[map].sections) {
                 var open = this._data.games[game].maps[map].sections[section].open;
                 mapObj.sections[section] = {}
                 mapObj.sections[section].open = open;
@@ -288,15 +288,15 @@ Main.prototype.sync = function() {
 
     var loaded = function() {
         main._data.selectedGame = temp.selectedGame;
-        for (game in temp.games) {
+        for (var game in temp.games) {
             var gameObj = main._data.games[game];
             if (!gameObj) {
                 continue;
             }
             gameObj.selectedMap = temp.games[game].selectedMap;
-            for (map in temp.games[game].maps) {
+            for (var map in temp.games[game].maps) {
                 var mapObj = gameObj.maps[map];
-                for (section in temp.games[game].maps[map].sections) {
+                for (var section in temp.games[game].maps[map].sections) {
                     var open = temp.games[game].maps[map].sections[section].open;
                     mapObj.sections[section].open = open;
                 }

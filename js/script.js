@@ -198,6 +198,7 @@ Main.prototype.init = function(game) {
     var loaded = function() {
         main._data.lastSync = main._syncDate;
 	      main._saveData();
+        main._syncing = false;
 
 	      // Populate selects
         main._gameSelect.empty();
@@ -215,6 +216,7 @@ Main.prototype.init = function(game) {
     }
 
     this._usingLocalStorage = false;
+    this._syncing = true;
     if(typeof(Storage) !== "undefined") {
 	      this._usingLocalStorage = true;
 	      this._data = localStorage[LOCAL_STORAGE_NAME]
@@ -306,7 +308,7 @@ Main.prototype.sync = function() {
         main._data.lastSync = main._syncDate;
 	      main._saveData();
         main._syncButton.hide();
-        this._syncing = false;
+        main._syncing = false;
 
 	      // Populate selects
         main._gameSelect.empty();
@@ -473,13 +475,9 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
 }
 
 Main.prototype._saveData = function() {
-    if (this._usingLocalStorage) {
+    if (this._usingLocalStorage && !this._syncing) {
 	      localStorage[LOCAL_STORAGE_NAME] = JSON.stringify(this._data);
     }
-}
-
-Main.prototype._refreshStatsArea = function() {
-
 }
 
 $(document).ready(function() {

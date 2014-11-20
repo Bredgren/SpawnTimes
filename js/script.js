@@ -439,7 +439,7 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
                 title.text("Unable to load data");
                 alert.append(title);
                 var msg = $("<p>");
-                msg.text("The Google Doc is currently being modified. Trying to " +
+                msg.text("The Google Sheet is currently being modified. Trying to " +
                          "load now may fail if the document is in an inconsistent " +
                          "state. Sorry, try again in a little bit.");
                 alert.append(msg);

@@ -28,32 +28,32 @@ function createCORSRequest(method, url) {
 var main;
 var LOCAL_STORAGE_NAME = "spawnTimeData";
 /*
-Data format: {
-  lastSync: <date>,
-  selectedGame: <GameName>,
-  games: {
-    <GameName>: {
-      selectedMap: <MapName>,
-      sectionOrder: [<SectionName>, ...],
-      maps: {
-        <MapName>: {
-          sections: {
-            <SectionName>: {
-              open: <bool>,
-              items: {
-                <ItemName>: <ItemValue>,
-                ...
-              }
-            },
-            ...
-          }
-        },
-        ...
-      }
-    },
-    ...
+  Data format: {
+    lastSync: <date>,
+    selectedGame: <GameName>,
+    games: {
+      <GameName>: {
+        selectedMap: <MapName>,
+        sectionOrder: [<SectionName>, ...],
+        maps: {
+          <MapName>: {
+            sections: {
+              <SectionName>: {
+                open: <bool>,
+                items: {
+                  <ItemName>: <ItemValue>,
+                  ...
+                }
+              },
+              ...
+            }
+          },
+          ...
+        }
+      },
+      ...
+    }
   }
-}
 */
 
 /*******************************/
@@ -80,8 +80,8 @@ StatusArea.prototype.startLoading = function(max, onLoad) {
     this._current = 0;
     this._onLoad = onLoad;
 
-	  var progressBar = $("#loading-progress");
-	  progressBar.attr('aria-valuemax', max);
+    var progressBar = $("#loading-progress");
+    progressBar.attr('aria-valuemax', max);
     this._newElement();
 }
 
@@ -141,13 +141,13 @@ StatsArea.prototype.newPanel = function(title, section) {
 
     heading.text(title);
     heading.click(function () {
-	      if (body.is(":hidden")) {
-	          body.slideDown("fast");
+        if (body.is(":hidden")) {
+            body.slideDown("fast");
             main.setSectionOpen(section, true);
-	      } else {
-	          body.slideUp("fast");
+        } else {
+            body.slideUp("fast");
             main.setSectionOpen(section, false);
-	      }
+        }
     })
     panel.append(heading);
     panel.append(body);
@@ -197,44 +197,44 @@ function getSortedKeys(obj) {
 Main.prototype.init = function(game) {
     var loaded = function() {
         main._data.lastSync = main._syncDate;
-	      main._saveData();
+        main._saveData();
         main._syncing = false;
 
-	      // Populate selects
+        // Populate selects
         main._gameSelect.empty();
         var games = getSortedKeys(main._data.games);
         for (var i = 0; i < games.length; ++i) {
-	          main._gameSelect.append($("<option>").text(games[i]));
+            main._gameSelect.append($("<option>").text(games[i]));
         }
         var maps = getSortedKeys(main._data.games[main._data.selectedGame].maps);
         for (var i = 0; i < maps.length; ++i) {
-	          main._mapSelect.append($("<option>").text(maps[i]));
+            main._mapSelect.append($("<option>").text(maps[i]));
         }
 
-	      // Select inital values
-	      main.setGame(main._data.selectedGame);
+        // Select inital values
+        main.setGame(main._data.selectedGame);
     }
 
     this._usingLocalStorage = false;
     this._syncing = true;
     if(typeof(Storage) !== "undefined") {
-	      this._usingLocalStorage = true;
-	      this._data = localStorage[LOCAL_STORAGE_NAME]
-	      if (!this._data) {
-	          this._initData(loaded, true);
-	      } else {
-	          this._data = JSON.parse(this._data);
+        this._usingLocalStorage = true;
+        this._data = localStorage[LOCAL_STORAGE_NAME]
+        if (!this._data) {
+            this._initData(loaded, true);
+        } else {
+            this._data = JSON.parse(this._data);
             this._initData(loaded, false);
-	      }
+        }
     } else {
-	      this._statusArea.newWarning("Local Storage not supported in this browser.");
-	      this._initData(loaded, true);
+        this._statusArea.newWarning("Local Storage not supported in this browser.");
+        this._initData(loaded, true);
     }
 }
 
 Main.prototype.setGame = function(game) {
     this._data.selectedGame = game;
-	  this._gameSelect.val(game);
+    this._gameSelect.val(game);
     this._saveData();
     this.setMap(this._data.games[game].selectedMap);
 }
@@ -245,11 +245,11 @@ Main.prototype.setMap = function(map) {
     this._mapSelect.empty();
     var maps = getSortedKeys(this._data.games[game].maps);
     for (var i = 0; i < maps.length; ++i) {
-	      this._mapSelect.append($("<option>").text(maps[i]));
+        this._mapSelect.append($("<option>").text(maps[i]));
     }
 
     this._data.games[game].selectedMap = map;
-	  this._mapSelect.val(map);
+    this._mapSelect.val(map);
     this._saveData();
     var sections = this._data.games[game].maps[map].sections
     for (var i = 0; i < this._setMapListeners.length; ++i) {
@@ -306,23 +306,23 @@ Main.prototype.sync = function() {
         }
 
         main._data.lastSync = main._syncDate;
-	      main._saveData();
+        main._saveData();
         main._syncButton.hide();
         main._syncing = false;
 
-	      // Populate selects
+        // Populate selects
         main._gameSelect.empty();
         var games = getSortedKeys(main._data.games);
         for (var i = 0; i < games.length; ++i) {
-	          main._gameSelect.append($("<option>").text(games[i]));
+            main._gameSelect.append($("<option>").text(games[i]));
         }
         var maps = getSortedKeys(main._data.games[main._data.selectedGame].maps);
         for (var i = 0; i < maps.length; ++i) {
-	          main._mapSelect.append($("<option>").text(maps[i]));
+            main._mapSelect.append($("<option>").text(maps[i]));
         }
 
-	      // Select inital values
-	      main.setGame(main._data.selectedGame);
+        // Select inital values
+        main.setGame(main._data.selectedGame);
     }
 
     this._initData(loaded, true);
@@ -337,53 +337,53 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
     }
 
     function handleGameWorksheet(json) {
-	      var game = json.title.$t;
+        var game = json.title.$t;
         if (!json.entry) {
             console.log("Warning: No data for " + game);
             main._statusArea.incrementLoad(1);
             return;
         }
-	      main._data.games[game] = {};
+        main._data.games[game] = {};
         var gameObj = main._data.games[game];
         gameObj.maps = {}
 
-	      var columnNames = {};
-	      var sectionMap = {};
-	      var sections = [];
+        var columnNames = {};
+        var sectionMap = {};
+        var sections = [];
         var maps = [];
-	      for (var entryIndex = 0; entryIndex < json.entry.length; ++entryIndex) {
+        for (var entryIndex = 0; entryIndex < json.entry.length; ++entryIndex) {
             var entry = json.entry[entryIndex];
             var map = entry.title.$t;
             var content = entry.content.$t;
             var items = content.split(", ");
 
             if (map == "column") {
-		            for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+                for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
                     var item = items[itemIndex];
                     var itemContent = item.split(": ");
                     var columnKey = itemContent[0];
                     var columnName = itemContent[1];
                     columnNames[columnKey] = columnName;
-		            }
-		            continue;
+                }
+                continue;
             } else if (map == "section") {
-		            for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+                for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
                     var item = items[itemIndex];
                     var itemContent = item.split(": ");
                     var columnName = columnNames[itemContent[0]];
                     var sectionName = itemContent[1];
                     sectionMap[columnName] = sectionName;
-		            }
-		            continue;
+                }
+                continue;
             } else if (map == "sections") {
-		            for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
+                for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
                     var item = items[itemIndex];
                     var itemContent = item.split(": ");
                     var sectionName = itemContent[1];
                     sections.push(sectionName);
-		            }
+                }
                 gameObj.sectionOrder = sections;
-		            continue;
+                continue;
             }
             maps.push(map);
 
@@ -393,77 +393,90 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
 
             for (var i = 0; i < sections.length; ++i) {
                 var sectionName = sections[i];
-		            mapObj.sections[sectionName] = {}
+                mapObj.sections[sectionName] = {}
                 var section = mapObj.sections[sectionName];
                 section.open = true;
                 section.items = {};
             }
             for (var itemIndex = 0; itemIndex < items.length; ++itemIndex) {
-		            var item = items[itemIndex];
-		            var itemContent = item.split(": ");
-		            var name = columnNames[itemContent[0]];
-		            if (name == undefined) {
+                var item = items[itemIndex];
+                var itemContent = item.split(": ");
+                var name = columnNames[itemContent[0]];
+                if (name == undefined) {
                     name = itemContent[0];
                     console.log("Warning: No translation for '" + name + "'");
-		            }
-		            var time = itemContent[1];
-		            mapObj.sections[sectionMap[name]].items[name] = time;
+                }
+                var time = itemContent[1];
+                mapObj.sections[sectionMap[name]].items[name] = time;
             }
-	      }
+        }
         gameObj.selectedMap = maps[0];
         main._statusArea.incrementLoad(1);
     }
 
     function handleInfoWorksheet(json) {
         main._syncDate = json.updated.$t;
+        var editing = json.entry[0].content.$t.split(": ")[1];
+        console.log("editing:", editing);
         if (loadAll) {
-	          var games = [];
-            var entries = json.entry;
-            for (var entryIndex = 0; entryIndex < entries.length; ++entryIndex) {
-                games.push(entries[entryIndex].title.$t);
-            }
+            if (editing != "TRUE") {
+                var games = [];
+                var entries = json.entry;
+                for (var entryIndex = 1; entryIndex < entries.length; ++entryIndex) {
+                    games.push(entries[entryIndex].title.$t);
+                }
+                console.log("games:", games);
+                main._statusArea.startLoading(games.length, onDoneCallback);
+                main._data.selectedGame = games[0];
 
-            main._statusArea.startLoading(games.length, onDoneCallback);
-            main._data.selectedGame = games[0];
-
-            for (var gameIndex = 0; gameIndex < games.length; ++gameIndex) {
-                var gameName = games[gameIndex]
-                var id = gameIndex + 2;
-                loadWorksheet(id, handleGameWorksheet, handleError);
+                for (var gameIndex = 0; gameIndex < games.length; ++gameIndex) {
+                    var gameName = games[gameIndex]
+                    var id = gameIndex + 2;
+                    loadWorksheet(id, handleGameWorksheet, handleError);
+                }
+            } else {
+                var alert = $("<div class='alert alert-danger' role='alert'>");
+                var title = $("<strong>");
+                title.text("Unable to load data");
+                alert.append(title);
+                var msg = $("<p>");
+                msg.text("The Google Doc is currently being modified. Trying to load now may fail if the document is in an inconsistent state. Sorry, try again in a little bit.");
+                alert.append(msg);
+                $("#stats").append(alert);
             }
-        } else if (main._data.lastSync != main._syncDate) {
+        } else if (editing != "TRUE" && main._data.lastSync != main._syncDate) {
             main._syncButton.show();
         }
     }
 
     function handleError(game) {
-	      console.log("Warning: Unable to load", game);
+        console.log("Warning: Unable to load", game);
         main._statusArea.incrementLoad(1);
     };
 
     function loadWorksheet(id, onLoad, onError) {
-	      var scope = 'https://spreadsheets.google.com/feeds';
-	      var key = "1-oPs_owy6LIv3ROirjysRz4Vvap7h7VLdHsglR9m0po";
-	      var format = '/public/full?alt=json-in-script';
+        var scope = 'https://spreadsheets.google.com/feeds';
+        var key = "1-oPs_owy6LIv3ROirjysRz4Vvap7h7VLdHsglR9m0po";
+        var format = '/public/full?alt=json-in-script';
         var url = scope + '/list/' + key + '/' + id + format;
         var xhr = createCORSRequest('GET', url);
         xhr.open('GET', url);
         if (!xhr) {
-    	      throw new Error('CORS not supported');
+            throw new Error('CORS not supported');
         }
         xhr.onerror = onError;
 
         xhr.onload = function() {
-	          if (xhr.status == 200) {
-    		        var responseText = xhr.responseText;
-		            var startGarbage = "data.io.handleScriptLoaded(";
-		            var jsonString = responseText.slice(startGarbage.length + 1, -2);
-		            var jsonData = JSON.parse(jsonString).feed;
-		            onLoad(jsonData);
-	          } else {
+            if (xhr.status == 200) {
+                var responseText = xhr.responseText;
+                var startGarbage = "data.io.handleScriptLoaded(";
+                var jsonString = responseText.slice(startGarbage.length + 1, -2);
+                var jsonData = JSON.parse(jsonString).feed;
+                onLoad(jsonData);
+            } else {
                 main._statusArea.incrementLoad(1);
             }
-	      }
+        }
 
         xhr.send();
     }
@@ -476,7 +489,7 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
 
 Main.prototype._saveData = function() {
     if (this._usingLocalStorage && !this._syncing) {
-	      localStorage[LOCAL_STORAGE_NAME] = JSON.stringify(this._data);
+        localStorage[LOCAL_STORAGE_NAME] = JSON.stringify(this._data);
     }
 }
 
@@ -488,11 +501,11 @@ $(document).ready(function() {
 
 $("#info-button").click(function() {
     var infoSection = $("#info-section");
-	  if (infoSection.is(":hidden")) {
-	      infoSection.slideDown("fast");
-	  } else {
-	      infoSection.slideUp("fast");
-	  }
+    if (infoSection.is(":hidden")) {
+        infoSection.slideDown("fast");
+    } else {
+        infoSection.slideUp("fast");
+    }
 })
 
 $("#clean-button").click(function() {

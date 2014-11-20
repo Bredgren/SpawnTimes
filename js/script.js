@@ -417,15 +417,14 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
     function handleInfoWorksheet(json) {
         main._syncDate = json.updated.$t;
         var editing = json.entry[0].content.$t.split(": ")[1];
-        console.log("editing:", editing);
         if (loadAll) {
             if (editing != "TRUE") {
                 var games = [];
                 var entries = json.entry;
+                // Start at 1 to skip "editing" row
                 for (var entryIndex = 1; entryIndex < entries.length; ++entryIndex) {
                     games.push(entries[entryIndex].title.$t);
                 }
-                console.log("games:", games);
                 main._statusArea.startLoading(games.length, onDoneCallback);
                 main._data.selectedGame = games[0];
 
@@ -440,7 +439,9 @@ Main.prototype._initData = function(onDoneCallback, loadAll) {
                 title.text("Unable to load data");
                 alert.append(title);
                 var msg = $("<p>");
-                msg.text("The Google Doc is currently being modified. Trying to load now may fail if the document is in an inconsistent state. Sorry, try again in a little bit.");
+                msg.text("The Google Doc is currently being modified. Trying to " +
+                         "load now may fail if the document is in an inconsistent " +
+                         "state. Sorry, try again in a little bit.");
                 alert.append(msg);
                 $("#stats").append(alert);
             }
